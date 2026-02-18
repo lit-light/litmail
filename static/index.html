@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LitMail - Email Client</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #131829;
+            --bg-tertiary: #1a1f3a;
+            --accent: #00d4ff;
+            --accent-hover: #00e8ff;
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --border: #2d3748;
+            --success: #10b981;
+            --error: #ef4444;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        .container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* LOGIN PAGE */
+        .login-page {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-tertiary) 100%);
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        .login-page.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .login-form {
+            width: 100%;
+            max-width: 400px;
+            padding: 60px 40px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.1);
+            animation: slideUp 0.8s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .login-form h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #0088ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 40px;
+            letter-spacing: -1px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: border-color var(--transition), box-shadow var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+
+        .form-group button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent), #0088ff);
+            border: none;
+            border-radius: 8px;
+            color: var(--bg-primary);
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Syne', sans-serif;
+            cursor: pointer;
+            transition: transform var(--transition), box-shadow var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 212, 255, 0.3);
+        }
+
+        .form-group button:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            color: var(--error);
+            font-size: 13px;
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        /* INBOX PAGE */
+        .inbox-page {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .inbox-page.active {
+            display: flex;
+        }
+
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), #0088ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-email {
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        button {
+            padding: 10px 18px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        button:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        button.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        button.primary:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 180px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 20px 12px;
+            overflow-y: auto;
+        }
+
+        .sidebar button {
+            width: 100%;
+            padding: 12px 16px;
+            text-align: left;
+            border: none;
+            background: transparent;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            transition: all var(--transition);
+        }
+
+        .sidebar button:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .sidebar button.active {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .email-list {
+            width: 320px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .email-list-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .email-list-items {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .email-item {
+            padding: 16px;
+            border-bottom: 1px solid rgba(45, 55, 72, 0.5);
+            cursor: pointer;
+            transition: all var(--transition);
+            background: transparent;
+        }
+
+        .email-item:hover {
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .email-item.active {
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 3px solid var(--accent);
+        }
+
+        .email-from {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .email-subject {
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .email-preview {
+            font-size: 12px;
+            color: #6b7280;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .viewer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            color: var(--text-secondary);
+            font-size: 15px;
+            text-align: center;
+        }
+
+        .email-header {
+            background: var(--bg-secondary);
+            padding: 32px;
+            border-bottom: 1px solid var(--border);
+            overflow-y: auto;
+            max-height: 30%;
+        }
+
+        .email-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -0.3px;
+        }
+
+        .email-meta {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 16px 24px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .email-meta strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .email-body {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: var(--text-secondary);
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            color: var(--text-secondary);
+            gap: 12px;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 212, 255, 0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* COMPOSE PAGE */
+        .compose-page {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .compose-page.active {
+            display: flex;
+        }
+
+        .compose-form {
+            display: flex;
+            flex-direction: column;
+            padding: 32px;
+            gap: 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .compose-form input[type="email"],
+        .compose-form input[type="text"],
+        .compose-form textarea {
+            padding: 14px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color var(--transition);
+        }
+
+        .compose-form input:focus,
+        .compose-form textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+
+        .compose-form textarea {
+            flex: 1;
+            resize: none;
+            min-height: 300px;
+        }
+
+        .compose-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-start;
+        }
+
+        .compose-buttons button {
+            padding: 12px 24px;
+        }
+
+        .success {
+            color: var(--success);
+            font-size: 13px;
+            padding: 12px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Page -->
+        <div class="login-page active">
+            <div class="login-form">
+                <h1>LitMail</h1>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required value="alex@truephonetics.com" placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required value="AlexPass123!@#" placeholder="••••••••">
+                    </div>
+                    <div class="form-group">
+                        <button type="submit">Sign In</button>
+                    </div>
+                    <div id="loginError" class="error"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Inbox Page -->
+        <div class="inbox-page">
+            <header>
+                <h1>LitMail</h1>
+                <div class="user-info">
+                    <div class="user-email" id="userEmail"></div>
+                    <button class="primary" onclick="showCompose()">+ Compose</button>
+                    <button onclick="logout()">Logout</button>
+                </div>
+            </header>
+
+            <div class="main">
+                <div class="sidebar">
+                    <button class="active" onclick="showInbox()">📩 Inbox</button>
+                </div>
+
+                <div class="content">
+                    <div class="email-list">
+                        <div class="email-list-header">Inbox</div>
+                        <div class="email-list-items" id="emailList">
+                            <div class="loading">
+                                <span class="spinner"></span>
+                                <span>Loading</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="viewer">
+                        <div id="emptyState" class="empty-state">
+                            Select an email to read
+                        </div>
+                        <div id="emailViewer" style="display: none; flex: 1; display: flex; flex-direction: column;">
+                            <div class="email-header">
+                                <h2 id="emailSubject"></h2>
+                                <div class="email-meta">
+                                    <strong>From</strong>
+                                    <span id="emailFrom"></span>
+                                    <strong>To</strong>
+                                    <span id="emailTo"></span>
+                                    <strong>Date</strong>
+                                    <span id="emailDate"></span>
+                                </div>
+                            </div>
+                            <div class="email-body" id="emailBody"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compose Page -->
+        <div class="compose-page">
+            <header>
+                <h1>LitMail</h1>
+                <div class="user-info">
+                    <button onclick="showInbox()">← Back to Inbox</button>
+                </div>
+            </header>
+
+            <div class="compose-form">
+                <input type="email" id="composeTo" placeholder="To: recipient@example.com" required>
+                <input type="text" id="composeSubject" placeholder="Subject line..." required>
+                <textarea id="composeBody" placeholder="Message body..." required></textarea>
+                <div class="compose-buttons">
+                    <button class="primary" onclick="sendEmail()">Send Email</button>
+                    <button onclick="showInbox()">Cancel</button>
+                </div>
+                <div id="composeError" class="error"></div>
+                <div id="composeSuccess" class="success"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        let token = null;
+        let currentEmail = null;
+
+        async function login(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    document.getElementById('loginError').textContent = `Error: ${error.detail}`;
+                    return;
+                }
+
+                const data = await response.json();
+                token = data.access_token;
+                document.getElementById('userEmail').textContent = email;
+                showInbox();
+                loadEmails();
+            } catch (error) {
+                document.getElementById('loginError').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function loadEmails() {
+            const emailList = document.getElementById('emailList');
+            emailList.innerHTML = '<div class="loading"><span class="spinner"></span><span>Loading</span></div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/inbox?token=${token}`);
+                if (!response.ok) throw new Error('Failed to load emails');
+
+                const data = await response.json();
+                emailList.innerHTML = '';
+
+                if (data.emails.length === 0) {
+                    emailList.innerHTML = '<div class="empty-state" style="width: 100%;">No emails</div>';
+                    return;
+                }
+
+                data.emails.forEach(email => {
+                    const div = document.createElement('div');
+                    div.className = 'email-item';
+                    div.innerHTML = `
+                        <div class="email-from">${email.from}</div>
+                        <div class="email-subject">${email.subject}</div>
+                        <div class="email-preview">${email.preview}</div>
+                    `;
+                    div.onclick = (e) => loadEmail(email.id, e);
+                    emailList.appendChild(div);
+                });
+            } catch (error) {
+                emailList.innerHTML = `<div class="error" style="padding: 20px;">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function loadEmail(emailId, e) {
+            try {
+                const response = await fetch(`${API_URL}/api/email/${emailId}?token=${token}`);
+                if (!response.ok) throw new Error('Failed to load email');
+
+                const email = await response.json();
+                currentEmail = email;
+
+                document.getElementById('emptyState').style.display = 'none';
+                document.getElementById('emailViewer').style.display = 'flex';
+                document.getElementById('emailSubject').textContent = email.subject;
+                document.getElementById('emailFrom').textContent = email.from;
+                document.getElementById('emailTo').textContent = email.to || '(unknown)';
+                document.getElementById('emailDate').textContent = email.date;
+                document.getElementById('emailBody').textContent = email.body;
+
+                // Update active email in list
+                document.querySelectorAll('.email-item').forEach(item => item.classList.remove('active'));
+                if (e && e.currentTarget) {
+                    e.currentTarget.classList.add('active');
+                }
+            } catch (error) {
+                alert(`Error loading email: ${error.message}`);
+            }
+        }
+
+        async function sendEmail() {
+            const to = document.getElementById('composeTo').value;
+            const subject = document.getElementById('composeSubject').value;
+            const body = document.getElementById('composeBody').value;
+
+            document.getElementById('composeError').textContent = '';
+            document.getElementById('composeSuccess').textContent = '';
+
+            try {
+                const response = await fetch(`${API_URL}/api/send?token=${token}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ to, subject, body })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    document.getElementById('composeError').textContent = `Error: ${error.detail}`;
+                    return;
+                }
+
+                document.getElementById('composeSuccess').textContent = '✓ Email sent successfully!';
+                setTimeout(() => {
+                    document.getElementById('composeTo').value = '';
+                    document.getElementById('composeSubject').value = '';
+                    document.getElementById('composeBody').value = '';
+                    showInbox();
+                    loadEmails();
+                }, 2000);
+            } catch (error) {
+                document.getElementById('composeError').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function logout() {
+            await fetch(`${API_URL}/api/logout?token=${token}`, { method: 'POST' });
+            token = null;
+            document.getElementById('loginForm').reset();
+            showPage('login');
+        }
+
+        function showInbox() {
+            showPage('inbox');
+            loadEmails();
+        }
+
+        function showCompose() {
+            showPage('compose');
+        }
+
+        function showPage(page) {
+            document.querySelectorAll('.login-page, .inbox-page, .compose-page').forEach(p => p.classList.remove('active'));
+            if (page === 'login') document.querySelector('.login-page').classList.add('active');
+            if (page === 'inbox') document.querySelector('.inbox-page').classList.add('active');
+            if (page === 'compose') document.querySelector('.compose-page').classList.add('active');
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', login);
+    </script>
+</body>
+</html>
