@@ -646,9 +646,20 @@
 
     <script>
         const API_URL = window.location.origin;
-        let token = null;
+        let token = localStorage.getItem('litmail_token') || null;
         let currentEmail = null;
         let currentFolder = 'INBOX';
+
+        // Auto-login if token exists in localStorage
+        window.addEventListener('load', () => {
+            if (token) {
+                document.getElementById('userEmail').textContent = localStorage.getItem('litmail_email');
+                showPage('inbox');
+                loadFolder('INBOX');
+            } else {
+                showPage('login');
+            }
+        });
 
         async function login(e) {
             e.preventDefault();
@@ -670,6 +681,9 @@
 
                 const data = await response.json();
                 token = data.access_token;
+                // Save to localStorage for persistence
+                localStorage.setItem('litmail_token', token);
+                localStorage.setItem('litmail_email', email);
                 document.getElementById('userEmail').textContent = email;
                 showInbox();
                 loadFolder('INBOX');
@@ -826,6 +840,9 @@
         async function logout() {
             await fetch(`${API_URL}/api/logout?token=${token}`, { method: 'POST' });
             token = null;
+            // Clear localStorage
+            localStorage.removeItem('litmail_token');
+            localStorage.removeItem('litmail_email');
             document.getElementById('loginForm').reset();
             showPage('login');
         }
