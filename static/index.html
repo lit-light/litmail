@@ -536,7 +536,9 @@
 
             <div class="main">
                 <div class="sidebar">
-                    <button class="active" onclick="showInbox()">📩 Inbox</button>
+                    <button class="active" id="inboxBtn" onclick="loadFolder('INBOX')">📩 Inbox</button>
+                    <button id="draftsBtn" onclick="loadFolder('Drafts')">📝 Drafts</button>
+                    <button id="sentBtn" onclick="loadFolder('Sent')">✓ Sent</button>
                 </div>
 
                 <div class="content">
@@ -588,6 +590,7 @@
                 <textarea id="composeBody" placeholder="Message body..." required></textarea>
                 <div class="compose-buttons">
                     <button class="primary" onclick="sendEmail()">Send Email</button>
+                    <button onclick="saveDraft()">Save Draft</button>
                     <button onclick="showInbox()">Cancel</button>
                 </div>
                 <div id="composeError" class="error"></div>
@@ -600,6 +603,7 @@
         const API_URL = window.location.origin;
         let token = null;
         let currentEmail = null;
+        let currentFolder = 'INBOX';
 
         async function login(e) {
             e.preventDefault();
@@ -623,25 +627,38 @@
                 token = data.access_token;
                 document.getElementById('userEmail').textContent = email;
                 showInbox();
-                loadEmails();
+                loadFolder('INBOX');
             } catch (error) {
                 document.getElementById('loginError').textContent = `Error: ${error.message}`;
             }
         }
 
-        async function loadEmails() {
+        async function loadFolder(folder) {
+            currentFolder = folder;
             const emailList = document.getElementById('emailList');
+            const listHeader = document.querySelector('.email-list-header');
+            
+            // Update button states
+            document.querySelectorAll('.sidebar button').forEach(btn => btn.classList.remove('active'));
+            if (folder === 'INBOX') document.getElementById('inboxBtn').classList.add('active');
+            if (folder === 'Drafts') document.getElementById('draftsBtn').classList.add('active');
+            if (folder === 'Sent') document.getElementById('sentBtn').classList.add('active');
+            
+            // Update header
+            listHeader.textContent = folder.charAt(0).toUpperCase() + folder.slice(1);
+            
             emailList.innerHTML = '<div class="loading"><span class="spinner"></span><span>Loading</span></div>';
 
             try {
-                const response = await fetch(`${API_URL}/api/inbox?token=${token}`);
-                if (!response.ok) throw new Error('Failed to load emails');
+                // Use generic folder endpoint
+                const response = await fetch(`${API_URL}/api/folder/${folder}?token=${token}`);
+                if (!response.ok) throw new Error(`Failed to load ${folder}`);
 
                 const data = await response.json();
                 emailList.innerHTML = '';
 
                 if (data.emails.length === 0) {
-                    emailList.innerHTML = '<div class="empty-state" style="width: 100%;">No emails</div>';
+                    emailList.innerHTML = `<div class="empty-state" style="width: 100%;">No emails in ${folder}</div>`;
                     return;
                 }
 
@@ -659,6 +676,11 @@
             } catch (error) {
                 emailList.innerHTML = `<div class="error" style="padding: 20px;">Error: ${error.message}</div>`;
             }
+        }
+
+        async function loadEmails() {
+            // Legacy function, now routes to loadFolder
+            loadFolder('INBOX');
         }
 
         async function loadEmail(emailId, e) {
@@ -684,6 +706,37 @@
                 }
             } catch (error) {
                 alert(`Error loading email: ${error.message}`);
+            }
+        }
+
+        async function saveDraft() {
+            const to = document.getElementById('composeTo').value;
+            const subject = document.getElementById('composeSubject').value;
+            const body = document.getElementById('composeBody').value;
+
+            document.getElementById('composeError').textContent = '';
+            document.getElementById('composeSuccess').textContent = '';
+
+            try {
+                const response = await fetch(`${API_URL}/api/draft?token=${token}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ to, subject, body })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    document.getElementById('composeError').textContent = `Error: ${error.detail}`;
+                    return;
+                }
+
+                document.getElementById('composeSuccess').textContent = '✓ Draft saved successfully!';
+                setTimeout(() => {
+                    loadFolder('Drafts');
+                    showInbox();
+                }, 2000);
+            } catch (error) {
+                document.getElementById('composeError').textContent = `Error: ${error.message}`;
             }
         }
 
@@ -714,7 +767,7 @@
                     document.getElementById('composeSubject').value = '';
                     document.getElementById('composeBody').value = '';
                     showInbox();
-                    loadEmails();
+                    loadFolder('INBOX');
                 }, 2000);
             } catch (error) {
                 document.getElementById('composeError').textContent = `Error: ${error.message}`;
@@ -730,7 +783,7 @@
 
         function showInbox() {
             showPage('inbox');
-            loadEmails();
+            loadFolder('INBOX');
         }
 
         function showCompose() {
