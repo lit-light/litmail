@@ -387,9 +387,54 @@
             padding: 32px;
             overflow-y: auto;
             line-height: 1.6;
-            white-space: pre-wrap;
             word-wrap: break-word;
             color: var(--text-secondary);
+            background: var(--bg-primary);
+        }
+
+        .email-body pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+
+        .email-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin: 12px 0;
+        }
+
+        .email-body a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .email-body a:hover {
+            text-decoration: underline;
+        }
+
+        .email-body table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 12px 0;
+        }
+
+        .email-body th, .email-body td {
+            border: 1px solid var(--border);
+            padding: 8px;
+            text-align: left;
+        }
+
+        .email-body th {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-weight: 600;
         }
 
         .loading {
@@ -697,7 +742,11 @@
                 document.getElementById('emailFrom').textContent = email.from;
                 document.getElementById('emailTo').textContent = email.to || '(unknown)';
                 document.getElementById('emailDate').textContent = email.date;
-                document.getElementById('emailBody').textContent = email.body;
+                // Render HTML emails safely (sanitize dangerous tags)
+                const sanitizedBody = email.body
+                    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                    .replace(/on\w+\s*=/gi, '');
+                document.getElementById('emailBody').innerHTML = sanitizedBody;
 
                 // Update active email in list
                 document.querySelectorAll('.email-item').forEach(item => item.classList.remove('active'));
